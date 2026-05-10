@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Expense Tracker{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        {% if session.get('user_id') %}
+        <nav class="sidebar glass-panel">
+            <div class="logo">
+                <i class="fa-solid fa-wallet"></i>
+                <h2>Expenso</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard.index') }}" class="{{ 'active' if request.endpoint == 'dashboard.index' else '' }}"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('transactions.manage_expenses') }}" class="{{ 'active' if request.endpoint == 'transactions.manage_expenses' else '' }}"><i class="fa-solid fa-money-bill-wave"></i> Expenses</a></li>
+                <li><a href="{{ url_for('transactions.manage_income') }}" class="{{ 'active' if request.endpoint == 'transactions.manage_income' else '' }}"><i class="fa-solid fa-piggy-bank"></i> Income</a></li>
+                <li><a href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-switch" aria-label="Toggle Dark Mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+        {% endif %}
+
+        <main class="main-content">
+            <header class="topbar">
+                {% if session.get('username') %}
+                <div class="user-greeting">
+                    <h1>Welcome back, <span>{{ session.get('username') }}</span> 👋</h1>
+                </div>
+                {% else %}
+                <div class="theme-toggle top-right">
+                    <button id="theme-switch" aria-label="Toggle Dark Mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </header>
+
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="content-wrapper fade-in">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

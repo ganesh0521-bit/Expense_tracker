@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <div class="stat-card balance fade-in">
+        <div class="stat-title">Remaining Balance</div>
+        <div class="stat-value">${{ "%.2f"|format(balance) }}</div>
+    </div>
+    <div class="stat-card income fade-in" style="animation-delay: 0.1s;">
+        <div class="stat-title">Total Income</div>
+        <div class="stat-value">${{ "%.2f"|format(total_income) }}</div>
+    </div>
+    <div class="stat-card expense fade-in" style="animation-delay: 0.2s;">
+        <div class="stat-title">Total Expenses</div>
+        <div class="stat-value">${{ "%.2f"|format(total_expenses) }}</div>
+    </div>
+</div>
+
+<div class="main-grid">
+    <div class="panel glass-panel fade-in" style="animation-delay: 0.3s;">
+        <div class="panel-header">
+            <h3>Expenses by Category</h3>
+        </div>
+        <div class="chart-container" style="position: relative; height:300px; width:100%">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+
+    <div class="panel glass-panel fade-in" style="animation-delay: 0.4s;">
+        <div class="panel-header">
+            <h3>Recent Activity</h3>
+        </div>
+        <div class="transaction-list">
+            {% for inc in recent_income %}
+            <div class="transaction-item">
+                <div class="t-info">
+                    <span class="t-title">{{ inc.source }}</span>
+                    <span class="t-date">{{ inc.date }}</span>
+                </div>
+                <div class="t-amount income">+${{ "%.2f"|format(inc.amount) }}</div>
+            </div>
+            {% endfor %}
+            {% for exp in recent_expenses %}
+            <div class="transaction-item">
+                <div class="t-info">
+                    <span class="t-title">{{ exp.category }} - {{ exp.description }}</span>
+                    <span class="t-date">{{ exp.date }}</span>
+                </div>
+                <div class="t-amount expense">-${{ "%.2f"|format(exp.amount) }}</div>
+            </div>
+            {% endfor %}
+            
+            {% if not recent_income and not recent_expenses %}
+            <div class="transaction-item" style="justify-content: center; color: var(--text-muted)">
+                No recent activity found.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="chart-data" type="application/json">
+    {
+        "labels": {{ category_labels | tojson }},
+        "values": {{ category_values | tojson }}
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('categoryChart');
+        if (ctx) {
+            const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+            const labels = chartData.labels;
+            const data = chartData.values;
+            
+            if (data.length > 0) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#6366f1', '#ec4899', '#10b981', '#f59e0b', 
+                                '#8b5cf6', '#ef4444', '#14b8a6', '#f43f5e'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#f8fafc' : '#0f172a'
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                ctx.parentElement.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:var(--text-muted)">No expense data to display</div>';
+            }
+        }
+    });
+</script>
+{% endblock %}
